@@ -5,7 +5,7 @@ import OpenAI from 'openai';
 
 dotenv.config();
 
-const bot = new Telegraf(process.env.TELEGRAM_BOT_API_KEY);
+const bot = new Telegraf(process.env.TELEGRAM_BOT_API_KEY as string);
 const openAI = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY,
 });
