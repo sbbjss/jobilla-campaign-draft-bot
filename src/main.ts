@@ -7,7 +7,6 @@ import { message } from 'telegraf/filters';
 import { Message } from './enums/Message';
 import { ButtonLabel } from './enums/ButtonLabel';
 import { ChatCompletionMessageParam } from 'openai/src/resources/chat/completions';
-import { parseOffice } from 'officeparser';
 
 dotenv.config();
 
@@ -104,43 +103,15 @@ bot.hears(ButtonLabel.GetStarted, (ctx) => {
     );
 });
 
-<<<<<<< HEAD
-bot.on(message('text'),  async (ctx) => {
-    const message = ctx.update.message.text;
-    messagesHistory.push({ role: 'user', content: message });
-  declutterMessagesHistory();
-=======
 // User opts out of sending PII and uploads campaign draft
 bot.hears(ButtonLabel.NoPIISent, async ctx => {
     ctx.reply(Message.SendCampaignDraft, Markup.removeKeyboard());
 });
->>>>>>> df7a32b3d5a387d77c2402fc63d72c681f7cedb6
 
 // On sending campaign draft as text
 bot.on(message('text'), async ctx => {
     const userInput = ctx.update.message.text;
-<<<<<<< HEAD
-    messagesHistory.push({ role: 'user', content: userInput });
-
-    try {
-        ctx.sendChatAction('typing');
-        const response = await openAI.chat.completions.create({
-          model: "gpt-3.5-turbo",
-          messages: messagesHistory,
-          max_tokens: 2000,
-          temperature: 0.5,
-          stream: false,
-        });
-    
-        messagesHistory.push(response.choices[0].message);
-        declutterMessagesHistory();
-        ctx.reply(response.choices[0].message?.content as string);
-      } catch (err) {
-        console.log('ChatGPT error: ' + err);
-    }
-=======
     sendAndProcessPrompt(ctx, userInput);
->>>>>>> df7a32b3d5a387d77c2402fc63d72c681f7cedb6
 });
 
 // On sending campaign draft as docx
