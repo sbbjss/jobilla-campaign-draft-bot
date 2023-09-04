@@ -16,6 +16,7 @@ bot.on(message('text'),  async (ctx) => {
     const message = ctx.update.message.text;
 
     try {
+        ctx.telegram.sendChatAction(ctx.chat.id, 'typing');
         const response = await openAI.chat.completions.create({
           model: "gpt-3.5-turbo",
           messages: [{ role: 'user', content: message }],
@@ -24,11 +25,6 @@ bot.on(message('text'),  async (ctx) => {
           stream: false,
         });
     
-        console.log(
-          'Full response: ', response,
-          'Choices: ', ...response.choices
-        );
-        console.log(response.choices[0].message?.content);
         ctx.reply(response.choices[0].message?.content as string);
       } catch (err) {
         console.log('ChatGPT error: ' + err);
