@@ -36,7 +36,7 @@ bot.hears(ButtonLabel.GetStarted, (ctx) => {
 bot.on(message('text'),  async (ctx) => {
     const message = ctx.update.message.text;
     messagesHistory.push({ role: 'user', content: message });
-    declutterMessagesHistory();
+  //declutterMessagesHistory();
 
     console.log(messagesHistory);
 
@@ -51,7 +51,7 @@ bot.on(message('text'),  async (ctx) => {
         });
     
         messagesHistory.push(response.choices[0].message);
-        declutterMessagesHistory();
+        //declutterMessagesHistory();
         ctx.reply(response.choices[0].message?.content as string);
       } catch (err) {
         console.log('ChatGPT error: ' + err);
