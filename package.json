@@ -1,6 +1,7 @@
 {
   "name": "jobilla-campaign-draft-bot",
   "version": "1.0.0",
+  "type": "module",
   "dependencies": {
     "openai": "^4.4.0",
     "telegraf": "^4.13.1"
