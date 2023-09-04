@@ -1,11 +1,9 @@
-import { Telegraf, Markup } from 'telegraf';
-import { message } from "telegraf/filters";
 import * as dotenv from 'dotenv';
 import OpenAI from 'openai';
-
+import { Telegraf, Markup } from 'telegraf';
+import { message } from "telegraf/filters";
 import { Message } from './enums/Message';
 import { ButtonLabel } from './enums/ButtonLabel';
-
 
 dotenv.config();
 
@@ -30,7 +28,7 @@ bot.on(message('text'),  async (ctx) => {
     const message = ctx.update.message.text;
 
     try {
-        ctx.telegram.sendChatAction(ctx.chat.id, 'typing');
+        ctx.sendChatAction('typing');
         const response = await openAI.chat.completions.create({
           model: "gpt-3.5-turbo",
           messages: [{ role: 'user', content: message }],
