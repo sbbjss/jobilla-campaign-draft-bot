@@ -1,5 +1,9 @@
 {
   "compilerOptions": {
     "module": "CommonJS",
+    "lib": ["ESNext"],
+    "target": "ESNext",
+    "include": ["src/*"],
+    "exclude": ["node_modules"]
   }
 }
