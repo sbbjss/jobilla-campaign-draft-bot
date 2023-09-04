@@ -13,4 +13,5 @@ const openAI = new OpenAI({
 bot.start((ctx) => ctx.reply('Welcome dear Jobillian! This tool is created to help you create a campaign draft easily. All sensitive data about customer and recruitment are not shared with OpenAI and not stored anywhere'));
 bot.help((ctx) => ctx.reply('Send me a sticker'));
 bot.on(message('text'), (ctx) => ctx.reply('I\'m still in the works!'));
+bot.launch();
 
