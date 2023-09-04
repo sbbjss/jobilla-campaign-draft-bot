@@ -2,8 +2,8 @@
   "name": "jobilla-campaign-draft-bot",
   "version": "1.0.0",
   "scripts": {
-    "start": "ts-node ./DraftCampaignBot.ts",
-    "dev": "ts-node-dev ./DraftCampaignBot.ts",
+    "start": "ts-node src/DraftCampaignBot.ts",
+    "dev": "ts-node-dev src/DraftCampaignBot.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
 },
   "dependencies": {
@@ -11,11 +11,12 @@
     "telegraf": "^4.13.1"
   },
   "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^6.5.0",
     "dotenv": "^16.3.1",
     "eslint": "^8.48.0",
+    "global": "^4.4.0",
     "ts-node": "^10.9.1",
     "ts-node-dev": "^2.0.0",
-    "typescript": "^5.2.2",
-    "typescript-eslint": "^0.0.1-alpha.0"
+    "typescript": "^5.2.2"
   }
 }
