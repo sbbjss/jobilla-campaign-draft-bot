@@ -12,10 +12,27 @@ const openAI = new OpenAI({
 
 bot.start((ctx) => ctx.reply('Welcome dear Jobillian! This tool is created to help you create a campaign draft easily. All sensitive data about customer and recruitment are not shared with OpenAI and not stored anywhere'));
 bot.help((ctx) => ctx.reply('Send me a sticker'));
-bot.on(message('text'),  (ctx) => {
-    ctx.reply('Now some magic will happen, pls wait!');
+bot.on(message('text'),  async (ctx) => {
     const message = ctx.update.message.text;
-    ctx.reply('Your message: ' + message);
+
+    try {
+        const response = await openAI.chat.completions.create({
+          model: "gpt-3.5-turbo",
+          messages: [{ role: 'user', content: message }],
+          max_tokens: 2000,
+          temperature: 1,
+          stream: false,
+        });
+    
+        console.log(
+          'Full response: ', response,
+          'Choices: ', ...response.choices
+        );
+        console.log(response.choices[0].message?.content);
+        ctx.reply(response.choices[0].message?.content as string);
+      } catch (err) {
+        console.log('ChatGPT error: ' + err);
+      }
 });
 bot.launch();
 
