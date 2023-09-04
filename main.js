@@ -1,7 +1,7 @@
 import { Telegraf } from 'telegraf';
 import { message } from "telegraf/filters";
 import * as dotenv from 'dotenv';
-import OpenAI from "openai";
+import OpenAI from 'openai';
 
 dotenv.config();
 
