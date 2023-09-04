@@ -1,137 +1,64 @@
 import * as dotenv from 'dotenv';
-import OpenAI from 'openai';
-import axios from 'axios';
-import { createDocumentParser } from '@arbs.io/asset-extractor-wasm';
-import { Context, Markup, Telegraf } from 'telegraf';
+import { Markup } from 'telegraf';
 import { message } from 'telegraf/filters';
 import { Message } from './enums/Message';
 import { ButtonLabel } from './enums/ButtonLabel';
-import { ChatCompletionMessageParam } from 'openai/src/resources/chat/completions';
+import { TelegrafHandler } from './classes/TelegrafHandler';
+import { Prompt } from './classes/Prompt';
+import { handlePrompt, processDocxFile } from './handlePrompt';
 
 dotenv.config();
 
-const bot = new Telegraf(process.env.TELEGRAM_BOT_API_KEY as string);
-const openAI = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY,
-});
+const telegraf = TelegrafHandler.getInstance();
+const prompt = Prompt.getInstance();
 
-
-// This is used to preserve context for chatGPT API. Should be replaced in a better way than code variable 
-const messagesHistory: Array<ChatCompletionMessageParam> = [];
-
-const declutterMessagesHistory = () => {
-    if (messagesHistory.length > 6) {
-        messagesHistory.shift();
-    }
-};
-
-const messageMapAndJoin = (messages: ChatCompletionMessageParam[]): string => {
-    return messages.map(msg => msg.content).join(' ');
-};
-
-const sendPromptToOpenAI = async (ctx: Context, input: string) => {
-    ctx.sendChatAction('typing');
-
-    const response = await openAI.chat.completions.create({
-        model: 'gpt-3.5-turbo',
-        messages: [{ role: 'user', content: input }],
-        max_tokens: 2000,
-        temperature: 0.5,
-        stream: false,
-    });
-
-    return response.choices[0].message?.content as string;
-};
-
-const sendAndProcessPrompt = async (ctx: Context, userInput: string) => {
-    try {
-        messagesHistory.push({ role: 'user', content: userInput });
-        const gptResponse = await sendPromptToOpenAI(ctx, messageMapAndJoin(messagesHistory));
-        declutterMessagesHistory();
-        ctx.reply(gptResponse);
-    } catch ( err ) {
-        ctx.reply(
-            Message.SomethingWentWrong,
-            Markup.keyboard([ButtonLabel.GetStarted]).resize(),
-        );
-    }
-}
-
-const processDocxFile = async (ctx: Context) => {
-    // @ts-ignore
-    const mimeType = ctx?.message?.document.mime_type;
-
-    // Check if the uploaded document is of type txt, docx, or pdf
-    if (!mimeType || mimeType !== 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
-        ctx.reply(
-            Message.IncorrectFile,
-            Markup.keyboard([ButtonLabel.GetStarted]).resize(),
-        );
-
-        return;
-    }
-
-    ctx.reply(Message.FileSuccess, Markup.removeKeyboard());
-
-    // @ts-ignore
-    const fileLink = await ctx.telegram.getFileLink(ctx.message.document.file_id);
-    const response = await axios.get(fileLink.toString(), { responseType: 'arraybuffer' });
-
-    if (!response.data) {
-        ctx.reply(
-            Message.SomethingWentWrong,
-            Markup.keyboard([ButtonLabel.GetStarted]).resize(),
-        );
-
-        return;
-    }
-
-    return createDocumentParser(new Uint8Array(response.data))?.contents?.text;
-}
 
 // Greets user
-bot.start((ctx) => ctx.reply(
+telegraf.getBot().start((ctx) => ctx.reply(
     Message.Welcome,
     Markup.keyboard([ButtonLabel.GetStarted]).resize(),
 ));
 
 // User selects way to handle PII
-bot.hears(ButtonLabel.GetStarted, (ctx) => {
+telegraf.getBot().hears([ButtonLabel.GetStarted, ButtonLabel.StartOver], (ctx) => {
     ctx.reply(
-        Message.ChoosePII,
+        Message.ChoosePIIMethod,
         Markup.keyboard([ButtonLabel.NoPIISent, ButtonLabel.PIIConsent]).resize(),
     );
 });
 
 // User opts out of sending PII and uploads campaign draft
-bot.hears(ButtonLabel.NoPIISent, async ctx => {
+telegraf.getBot().hears(ButtonLabel.NoPIISent, async ctx => {
     ctx.reply(Message.SendCampaignDraft, Markup.removeKeyboard());
 });
 
+// User agrees to let Jobilla Bot process PII and receives instructions
+telegraf.getBot().hears(ButtonLabel.PIIConsent, async ctx => {
+    ctx.reply(
+        Message.PIIInstructions,
+        Markup.keyboard([ButtonLabel.Ready, ButtonLabel.StartOver]).resize(),
+    );
+
+    // Proceeds user to send campaign draft
+    telegraf.getBot().hears(ButtonLabel.Ready, async ctx => {
+        ctx.reply(Message.SendCampaignDraft, Markup.removeKeyboard());
+    });
+});
+
 // On sending campaign draft as text
-bot.on(message('text'), async ctx => {
-    const userInput = ctx.update.message.text;
-    sendAndProcessPrompt(ctx, userInput);
+telegraf.getBot().on(message('text'), async ctx => {
+    prompt.setPrompt(ctx.update.message.text);
+    handlePrompt(ctx);
 });
 
 // On sending campaign draft as docx
-bot.on(message('document'), async ctx => {
-    const userInput = await processDocxFile(ctx);
-
-    if (userInput == null) {
-        ctx.reply(
-            Message.SomethingWentWrong,
-            Markup.keyboard([ButtonLabel.GetStarted]).resize(),
-        );
-
-        return;
-    }
-
-    sendAndProcessPrompt(ctx, userInput);
+telegraf.getBot().on(message('document'), async ctx => {
+    prompt.setPrompt(await processDocxFile(ctx) ?? '');
+    handlePrompt(ctx);
 });
 
-bot.launch();
+telegraf.getBot().launch();
 
 // Enable graceful stop
-process.once('SIGINT', () => bot.stop('SIGINT'));
-process.once('SIGTERM', () => bot.stop('SIGTERM'));
+process.once('SIGINT', () => telegraf.getBot().stop('SIGINT'));
+process.once('SIGTERM', () => telegraf.getBot().stop('SIGTERM'));
