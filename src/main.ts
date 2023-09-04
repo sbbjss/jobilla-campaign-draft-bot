@@ -1,6 +1,5 @@
 import * as dotenv from 'dotenv';
 import OpenAI from 'openai';
-import ChatCompletionMessage from "openai"
 import { Telegraf, Markup } from 'telegraf';
 import { message } from "telegraf/filters";
 import { Message } from './enums/Message';
@@ -10,6 +9,12 @@ dotenv.config();
 
 // This is used to preserve context for chatGPT API. Should be replaced in a better way than code variable 
 const messagesHistory = [] as any[];
+
+const declutterMessagesHistory = function() {
+    if (messagesHistory.length > 6) {
+        messagesHistory.shift();
+    }
+}
 
 const bot = new Telegraf(process.env.TELEGRAM_BOT_API_KEY as string);
 const openAI = new OpenAI({
@@ -31,6 +36,9 @@ bot.hears(ButtonLabel.GetStarted, (ctx) => {
 bot.on(message('text'),  async (ctx) => {
     const message = ctx.update.message.text;
     messagesHistory.push({ role: 'user', content: message });
+    declutterMessagesHistory();
+
+    console.log(messagesHistory);
 
     try {
         ctx.sendChatAction('typing');
@@ -43,6 +51,7 @@ bot.on(message('text'),  async (ctx) => {
         });
     
         messagesHistory.push(response.choices[0].message);
+        declutterMessagesHistory();
         ctx.reply(response.choices[0].message?.content as string);
       } catch (err) {
         console.log('ChatGPT error: ' + err);
