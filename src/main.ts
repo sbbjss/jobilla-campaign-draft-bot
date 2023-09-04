@@ -1,8 +1,11 @@
-import { Telegraf } from 'telegraf';
+import { Telegraf, Markup } from 'telegraf';
 import { message } from "telegraf/filters";
 import * as dotenv from 'dotenv';
 import OpenAI from 'openai';
-import { Message } from './flow/messages';
+
+import { Message } from './enums/Message';
+import { ButtonLabel } from './enums/ButtonLabel';
+
 
 dotenv.config();
 
@@ -11,8 +14,18 @@ const openAI = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY,
 });
 
-bot.start((ctx) => ctx.reply(Message.Welcome));
-bot.help((ctx) => ctx.reply(Message.Help));
+bot.start((ctx) => ctx.reply(
+    Message.Welcome,
+    Markup.keyboard([ButtonLabel.GetStarted]).resize(),
+));
+
+bot.hears(ButtonLabel.GetStarted, (ctx) => {
+    ctx.reply(
+        Message.ChoosePII,
+        Markup.keyboard([ButtonLabel.NoPIISent, ButtonLabel.PIIConsent]).resize(),
+    )
+});
+
 bot.on(message('text'),  async (ctx) => {
     const message = ctx.update.message.text;
 
