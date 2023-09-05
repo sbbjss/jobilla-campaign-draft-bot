@@ -8,7 +8,7 @@ export enum Message {
         '• Leave your campaign draft as it is and let Jobilla Bot handle it.',
     PIIInstructions =
         'For Jobilla Bot to keep PII safe, please go ahead and modify your campaign draft as following: \n' +
-        'Use \'$ sign followed by MACRO_CASE to give names for data that needs to stay in secret followed by \'= sign, followed by the data itself. \n' +
+        'Use \$ sign followed by MACRO_CASE to give names for data that needs to stay in secret followed by \= sign, followed by the data itself. \n' +
         'For example: to keep company name "Harnaś Entertainment" safe, use [$COMPANY_NAME=Harnaś Entertainment] \n' +
         'To keep candidate name "John Doe" safe, use [$CANDIDATE_NAME=John Doe] \n' +
         'To keep salary "1000€" safe, use [$SALARY=1000€] \n' +

@@ -1,4 +1,3 @@
-import * as dotenv from 'dotenv';
 import { Markup } from 'telegraf';
 import { message } from 'telegraf/filters';
 import { Message } from './enums/Message';
@@ -6,8 +5,6 @@ import { ButtonLabel } from './enums/ButtonLabel';
 import { TelegrafHandler } from './classes/TelegrafHandler';
 import { Prompt } from './classes/Prompt';
 import { handlePrompt, processDocxFile } from './handlePrompt';
-
-dotenv.config();
 
 const telegraf = TelegrafHandler.getInstance();
 const prompt = Prompt.getInstance();

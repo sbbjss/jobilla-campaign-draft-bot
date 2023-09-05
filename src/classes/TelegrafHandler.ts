@@ -1,4 +1,7 @@
 import { Telegraf } from 'telegraf';
+import * as dotenv from 'dotenv';
+
+dotenv.config();
 
 export class TelegrafHandler {
     private static instance: TelegrafHandler;
