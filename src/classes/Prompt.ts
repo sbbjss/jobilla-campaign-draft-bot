@@ -1,12 +1,9 @@
-import { ChatCompletionMessageParam } from 'openai/src/resources/chat/completions';
 import { OpenAIHandler } from './OpenAIHandler';
 
 export class Prompt {
     private static instance: Prompt;
 
-    private constructor() {
-        this.promptChain = this.promptBriefing;
-    }
+    private constructor() {}
 
     public static getInstance(): Prompt {
         if (!Prompt.instance) {
@@ -21,11 +18,8 @@ export class Prompt {
     private gptResponse: string = '';
     private promptChain: string = '';
     private userPrompt: string = '';
-    private applicationCount: number = 8;
-    private multipleChoiceQuestions: number = 4;
-    private choiceCount: number = 4;
-    private position: string = 'software developer';
-    private typesOfQuestions: string = 'technical skills, soft skills, and motivation';
+    private position: string = '';
+    private typesOfQuestions: string = '';
 
     private openAI = OpenAIHandler.getInstance();
 
@@ -49,7 +43,7 @@ export class Prompt {
 
         // Strip PII values from this.userPrompt
         this.userPrompt = this.userPrompt.replace(regex, (match, safeVariableName) => {
-            return `[$${safeVariableName}=REDACTED]`;
+            return `[$${safeVariableName}=UNKNOWN]`;
         });
     }
 
@@ -59,24 +53,8 @@ export class Prompt {
         }
     }
 
-    appendToPromptChain(promptChain: Array<ChatCompletionMessageParam>) {
-        this.promptChain = this.promptChain += promptChain.map(msg => msg.content).join(' ');
-    }
-
     setPrompt(prompt: string) {
         this.userPrompt = prompt;
-    }
-
-    setApplicationCount(value: number) {
-        this.applicationCount = value;
-    }
-
-    setMultipleChoiceQuestions(value: number) {
-        this.multipleChoiceQuestions = value;
-    }
-
-    setChoiceCount(value: number) {
-        this.choiceCount = value;
     }
 
     setPosition(value: string) {
@@ -96,8 +74,22 @@ export class Prompt {
         }
     }
 
+    public clearPrompt(): void {
+        this.position = '';
+        this.typesOfQuestions = '';
+        this.promptChain = '';
+        this.userPrompt = '';
+        this.gptResponse = '';
+    }
+
     async sendPrompt() {
+        // Cut prompt chain if it is about to overflow
         this.preventTokenOverflow();
+
+        // Add user prompt to prompt chain
+        this.promptChain = this.promptChain + ' \n' + `User: ${this.userPrompt}`;
+
+        // Strip sensitive data from prompt chain
         this.stripAndStorePIIFromPrompt();
 
         const response = await this.openAI.getApi().chat.completions.create({
@@ -115,21 +107,23 @@ export class Prompt {
         }
 
         this.restorePIIForResponse();
-        this.promptChain = this.promptChain + ' ' + this.gptResponse;
+        this.promptChain = this.promptChain + '\n ' + `ChatGPT: ${this.gptResponse}`;
     }
 
     get fullPrompt(): string {
-        return this.promptChain;
+        return this.promptInstructions + '\n ' + this.promptChain;
     }
 
     get response(): string {
         return this.gptResponse;
     }
 
-    get promptBriefing(): string {
-        return `Create ${this.applicationCount} application questions. 
-        ${this.multipleChoiceQuestions} should be with ${this.choiceCount} for ${this.position} applicant. 
-        Include questions about ${this.typesOfQuestions}.
-        If you encounter variables in square brackets, leave them as they are.`;
+    get promptInstructions(): string {
+        return `Create exactly 8 application questions
+        numbered from 1 to 8 for ${this.position} applicant. 
+        Each question should be with 4 answer options. 
+        Include questions about ${this.typesOfQuestions}. 
+        Campaign draft will be included after the instructions. 
+        If you encounter variables in square brackets, you can use them in questions as well.`;
     }
 }
